@@ -9,6 +9,7 @@ import App from "../src/App";
 const app = express();
 app.use(express.static("public"));
 
+
 app.get("*", (req, res) => {
     const content = renderToString(
         <Provider store={store}>
