@@ -12,6 +12,7 @@ function Index(props) {
     return <div>
         <h2>hello {props.title},  {count} </h2>
         <button onClick={() => setCount(count + 1)}>累加</button>
+        <button onClick={() => props.history.push("/about")}>跳转</button>
         {
             props.list && props.list.map(v => <div key={v}>{v.name}</div>)
         }
