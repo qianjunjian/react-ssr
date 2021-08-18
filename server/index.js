@@ -1,36 +1,62 @@
 import React from "react";
 import { renderToString } from "react-dom/server";
 import express from "express";
-import { StaticRouter } from "react-router-dom";
+import { StaticRouter, matchPath, Route } from "react-router-dom";
 import { Provider } from "react-redux";
-import store from "../src/store/store";
-import App from "../src/App";
+import { getServerStore } from "../src/store/store";
+import Header from "../src/component/Header";
+import { createProxyMiddleware } from "http-proxy-middleware";
+import routes from "../src/App";
 
 const app = express();
 app.use(express.static("public"));
+const store = getServerStore();
 
+app.use("/api", createProxyMiddleware({
+    target: "http://localhost:9090/",
+    changeOrigin: true
+}))
 
 app.get("*", (req, res) => {
-    const content = renderToString(
-        <Provider store={store}>
-            <StaticRouter location={req.url}>
-                {App}
-            </StaticRouter>
-        </Provider> 
-    )
 
-    res.send(`
-        <html>
-            <head>
-                <meta charset="utf-8" />
-                <title>react ssr</title>
-            </head>
-            <body>
-                <div id="root">${content}</div>
-                <script src="/bundle.js"></script>
-            </body>
-        </html>
-    `)
+    const promises = []
+    routes.some(route => {
+        const match = matchPath(req.path, route);
+        if (match) {
+            const { loadData } = route.component;
+            if (loadData) {
+                promises.push(loadData(store));
+            }
+        }
+    })
+
+    // 如果路由没有使用switch，会匹配多个路由，这样就有个问题，一个挂了，then不会执行，可以改用allSettled方法
+    Promise.all(promises).then(() => {
+        const content = renderToString(
+            <Provider store={store}>
+                <StaticRouter location={req.url}>
+                    <Header />
+                    {
+                        routes.map(route => <Route {...route} />)
+                    }
+                </StaticRouter>
+            </Provider>
+        )
+    
+        res.send(`
+            <html>
+                <head>
+                    <meta charset="utf-8" />
+                    <title>react ssr</title>
+                </head>
+                <body>
+                    <script>window.__content=${JSON.stringify(store.getState())}</script>
+                    <div id="root">${content}</div>
+                    <script src="/bundle.js"></script>
+                </body>
+            </html>
+        `)
+    })
 })
 
 app.listen(9093, () => {

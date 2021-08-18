@@ -1,12 +1,14 @@
 import React, {useState, useEffect} from "react";
 import { connect } from "react-redux";
 import { getIndexList } from "../store/index";
+import "./index.css";
 
 function Index(props) {
     const [count, setCount] = useState(1);
-
     useEffect(() => {
-        props.getIndexList();
+        if (!props.list.length) {
+            props.getIndexList();
+        }
     }, [])
 
     return <div>
@@ -14,9 +16,15 @@ function Index(props) {
         <button onClick={() => setCount(count + 1)}>累加</button>
         <button onClick={() => props.history.push("/about")}>跳转</button>
         {
-            props.list && props.list.map(v => <div key={v}>{v.name}</div>)
+            props.list.length && props.list.map(v => {
+                return <span key={v.name}>{v.name}</span>
+            })
         }
     </div>
+}
+
+Index.loadData = (store) => {
+    return store.dispatch(getIndexList());
 }
 
 export default connect(state => 
