@@ -5,7 +5,7 @@ import hoistNonReactStatics from "hoist-non-react-statics";
 function withStyle(Comp, styles) {
     function NewComp(porps) {
         if (porps.staticContext) {
-            console.log(styles)
+            console.log("11>>>>>>>>>>>>>", styles._getCss())
             porps.staticContext.css.push(styles._getCss())
         }
         return <Comp {...porps} />
