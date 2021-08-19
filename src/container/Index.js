@@ -1,7 +1,8 @@
 import React, {useState, useEffect} from "react";
 import { connect } from "react-redux";
 import { getIndexList } from "../store/index";
-import "./index.css";
+import withStyle from "../withStyle";
+import styles from "./index.module.css";
 
 function Index(props) {
     const [count, setCount] = useState(1);
@@ -10,10 +11,10 @@ function Index(props) {
             props.getIndexList();
         }
     }, [])
-
+  
     return <div>
         <h2>hello {props.title},  {count} </h2>
-        <button onClick={() => setCount(count + 1)}>累加</button>
+        <button className={styles.title} onClick={() => setCount(count + 1)}>累加</button>
         <button onClick={() => props.history.push("/about")}>跳转</button>
         {
             props.list.length && props.list.map(v => {
@@ -30,4 +31,4 @@ Index.loadData = (store) => {
 export default connect(state => 
     ({list: state.index.list}),
     {getIndexList}
-)(Index)
+)(withStyle(Index, styles))
